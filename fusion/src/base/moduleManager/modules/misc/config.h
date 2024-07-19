@@ -105,6 +105,9 @@ struct clicker {
     inline static float rightMinCps = 15;
     inline static bool blocksOnly = true;
 };
+struct arraylist {
+    inline static bool enable = false;
+};
 
 // Combined Configuration
 struct Config {

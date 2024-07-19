@@ -244,22 +244,46 @@ void Esp::RenderMenu()
 	ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
 	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.12f, 0.12f, 0.12f, 0.5));
 	ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10);
-	if (ImGui::BeginChild("esp", ImVec2(425, 330))) {
+	if (ImGui::BeginChild("esp", ImVec2(425, 170))) {
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3);
 		ImGui::Checkbox("Toggle ESP", &esp::Enabled);
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5);
 		ImGui::Separator();
-		ImGui::Checkbox("Show box", &esp::Box); ImGui::ColorEdit4("##outespcolor", esp::BoxColor, ALPHA);
-		ImGui::Checkbox("fill top", &esp::FilledBox);  ImGui::ColorEdit4("##fillespcolor", esp::FilledBoxColor, ALPHA);
-		ImGui::Checkbox("fill bottom", &esp::SecondFilledBox);  ImGui::ColorEdit4("##secondfillespcolor", esp::SecondFilledBoxColor, ALPHA);
-		ImGui::Checkbox("Show Healthbar", &esp::HealthBar);
+		if (esp::Enabled)
+		{
+			ImGui::Checkbox("Show box", &esp::Box); ImGui::SameLine(); ImGui::ColorEdit4("##outespcolor", esp::BoxColor, ALPHA);
+			ImGui::Checkbox("fill top", &esp::FilledBox); ImGui::SameLine();  ImGui::ColorEdit4("##fillespcolor", esp::FilledBoxColor, ALPHA);
+			ImGui::Checkbox("fill bottom", &esp::SecondFilledBox); ImGui::SameLine();  ImGui::ColorEdit4("##secondfillespcolor", esp::SecondFilledBoxColor, ALPHA);
+			ImGui::Checkbox("Show Healthbar", &esp::HealthBar);
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5);
+			ImGui::Checkbox("Show Text", &esp::Text);
+			ImGui::Checkbox("nickname", &esp::nickname);
+			ImGui::Checkbox("distance", &esp::distance);
+			ImGui::Checkbox("text outline", &esp::TextOutline);
+			Menu::DoSliderStuff(34875, "Fade Distance", &esp::FadeDistance, 0, 10);
+			Menu::DoSliderStuff(128763, "Text Size", &esp::TextSize, 12, 24);
+		}
+
+
+
+
+
+
+		ImGui::EndChild();
+	}
+	if (ImGui::BeginChild("arraylist", ImVec2(425, 170))) {
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3);
+		ImGui::Checkbox("toggle array", &arraylist::enable);
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5);
-		ImGui::Checkbox("Show Text", &esp::Text);
-		ImGui::Checkbox("nickname", &esp::nickname);
-		ImGui::Checkbox("distance", &esp::distance);
-		ImGui::Checkbox("text outline", &esp::TextOutline);
-		Menu::DoSliderStuff(34875, "Fade Distance", &esp::FadeDistance, 0, 10);
-		Menu::DoSliderStuff(128763, "Text Size", &esp::TextSize, 12, 24);
+		ImGui::Separator();
+		if (esp::Enabled)
+		{
+			
+		}
+
+
+
+
 
 
 		ImGui::EndChild();

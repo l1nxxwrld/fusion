@@ -6,6 +6,7 @@
 #include "modules/clicker/leftAutoClicker.h"
 #include "modules/clicker/rightAutoClicker.h"
 #include "commonData.h"
+#include "modules/visual/hud.h"
 
 void ModuleManager::Init()
 {
