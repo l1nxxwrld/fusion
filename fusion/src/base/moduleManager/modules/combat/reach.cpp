@@ -9,6 +9,7 @@
 #include "../../../patcher/patcher.h"
 
 #include <chrono>
+#include "../misc/config.h"
 
 
 //https://github.com/Lefraudeur/RiptermsGhost
@@ -17,7 +18,7 @@ std::chrono::steady_clock::time_point lastUpdate;
 void Reach::Update()
 {
 	static float prev_reach = -1.0f;
-	if (!Enabled)
+	if (!reach::Enabled)
 	{
 		if (!CommonData::SanityCheck()) return;
 		if (prev_reach != -1.0f)
@@ -27,10 +28,10 @@ void Reach::Update()
 		}
 		return;
 	}
-	if (prev_reach == Reach::ReachDistance || !CommonData::SanityCheck())
+	if (prev_reach == reach::ReachDistance || !CommonData::SanityCheck())
 		return;
-	prev_reach = ReachDistance;
-	Patcher::put("reach_distance", std::to_string(ReachDistance));
+	prev_reach = reach::ReachDistance;
+	Patcher::put("reach_distance", std::to_string(reach::ReachDistance));
 }
 
 
@@ -46,11 +47,11 @@ void Reach::RenderMenu()
 	{
 
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3);
-		Menu::DoToggleButtonStuff(230044, "Toggle Reach", &Reach::Enabled);
+		Menu::DoToggleButtonStuff(230044, "Toggle Reach", &reach::Enabled);
 
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5);
 		ImGui::Separator();
-		Menu::DoSliderStuff(560117, "Reach Distance", &Reach::ReachDistance, 0, 4);
+		Menu::DoSliderStuff(560117, "Reach Distance", &reach::ReachDistance, 0, 4);
 
 	}
 	ImGui::EndChild();

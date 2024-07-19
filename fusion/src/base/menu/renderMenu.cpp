@@ -13,6 +13,7 @@
 #include "../moduleManager/modules/combat/reach.h"
 #include "../moduleManager/modules/clicker/leftAutoClicker.h"
 #include "../moduleManager/modules/clicker/rightAutoClicker.h"
+#include "../moduleManager/modules/misc/config.h"
 
 #include "../sdk/net/minecraft/client/Minecraft.h"
 #include "../util/logger.h"
@@ -31,12 +32,12 @@ Although it looks good, it was my (deadshell's) first time making an imgui menu 
 
 void Menu::RenderMenu()
 {
-	ImGui::SetNextWindowSize(ImVec2(575, 300));
+	ImGui::SetNextWindowSize(ImVec2(575, 400));
 	ImGui::Begin(Menu::Title.c_str(), nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 	ImVec2 idk = ImGui::GetWindowSize();
 
-	int buttonAmount = 6;
-	int buttonHeight = 20;
+	int buttonAmount = 7;
+	int buttonHeight = 15;
 	ImGui::PushID("Start");
 	ImGui::Columns(2, "stuff");
 	float columnWidth = 110;
@@ -50,9 +51,10 @@ void Menu::RenderMenu()
 	Menu::GlitchText("FUSION", ImVec2(posX, posY));
 	ImGui::SetCursorPosY(textSize.y + 30);
 
-	if (Menu::TabButton("Visual", (currentTab == 0 ? ImVec4(0.3f, 0.3f, 0.3f,0.2f) : ImVec4(0.1f, 0.1f, 0.1f, 0.f)))) currentTab = 0;
+	if (Menu::TabButton("Visual", (currentTab == 0 ? ImVec4(0.3f, 0.3f, 0.3f, 0.2f) : ImVec4(0.1f, 0.1f, 0.1f, 0.f)))) currentTab = 0;
 	if (Menu::TabButton("Combat", (currentTab == 1 ? ImVec4(0.3f, 0.3f, 0.3f, 0.2f) : ImVec4(0.1f, 0.1f, 0.1f, 0.f)))) currentTab = 1;
 	if (Menu::TabButton("Clicker", (currentTab == 2 ? ImVec4(0.3f, 0.3f, 0.3f, 0.2f) : ImVec4(0.1f, 0.1f, 0.1f, 0.f)))) currentTab = 2;
+	if (Menu::TabButton("Misc", (currentTab == 3 ? ImVec4(0.3f, 0.3f, 0.3f, 0.2f) : ImVec4(0.1f, 0.1f, 0.1f, 0.f)))) currentTab = 3;
 
 
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(20, 5));
@@ -60,12 +62,6 @@ void Menu::RenderMenu()
 	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.64, 0.2, 0.2, 0.5));
 	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.74, 0.4, 0.4, 1));
 	ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1, 0.4, 0.4, 1));
-
-	ImGui::SetCursorPos(ImVec2(17.5, ImGui::GetCursorPosY() + 85));
-	if (ImGui::Button("Detach"))
-	{
-		Base::Running = false;
-	}
 
 	ImGui::PopStyleColor();
 	ImGui::PopStyleColor();
@@ -97,6 +93,11 @@ void Menu::RenderMenu()
 		{
 			LeftAutoClicker::RenderMenu();
 			RightAutoClicker::RenderMenu();
+			ImGui::InvisibleButton("", ImVec2(1, 100));
+		}
+		if (currentTab == 3)
+		{
+			config::RenderMenu();
 			ImGui::InvisibleButton("", ImVec2(1, 100));
 		}
 

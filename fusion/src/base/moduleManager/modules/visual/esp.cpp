@@ -7,11 +7,14 @@
 #include "../../../util/math/worldToScreen.h"
 #include "../../../util/render/renderqolf.h"
 #include "../../../menu/menu.h"
+
 #include <gl/GL.h>
+#include "../misc/config.h"
+
 
 void Esp::Update()
 {
-	if (!Enabled) return;
+	if (!esp::Enabled) return;
 	if (!CommonData::SanityCheck()) return;
 
 	CEntityPlayerSP* player = SDK::Minecraft->thePlayer;
@@ -49,8 +52,8 @@ void Esp::Update()
 		renderPos = Vector3{ x,y,z };
 	}
 
-	std::vector<Data> newData;
-	
+	std::vector<esp::Data> newData;
+
 	float renderPartialTicks = CommonData::renderPartialTicks;
 
 	for (CommonData::PlayerData entity : playerList)
@@ -71,9 +74,9 @@ void Esp::Update()
 		// You can't put one vector3 for fixing the jittering and use that to subtract all of them with it
 		// it will mess screw up for some weird reason. Try it for yourself if you wish!
 		//Vector3 fixedEntityPos{ entityLastPos + (entityLastPos - entityPos) * renderPartialTicks };
-		
+
 		// This stops the jittering, the calculations must be inverted for some reason from the original
-		Vector3 origin { renderPos - entityLastPos + (entityLastPos - entityPos) * renderPartialTicks }; // At the feet
+		Vector3 origin{ renderPos - entityLastPos + (entityLastPos - entityPos) * renderPartialTicks }; // At the feet
 
 		// Same with the offset of the point, it must be offset from the render position, not the entity position for some weird reason.
 		Vector3 top{ (renderPos - Vector3{0, entityHeight * 2, 0}) - entityLastPos + (entityLastPos - entityPos) * renderPartialTicks }; // Over the head
@@ -100,8 +103,8 @@ void Esp::Update()
 		// For when the player gets close to an entity, a fade factor; a value between 0 and 1, with basic math, can get a cool looking fade effect if the player is too close
 		// or inside the FadeDistance radius.
 		float fadeFactor = 1.0f;
-		if ((dist - 1) <= FadeDistance)
-			fadeFactor = ((dist - 1) / FadeDistance);
+		if ((dist - 1) <= esp::FadeDistance)
+			fadeFactor = ((dist - 1) / esp::FadeDistance);
 
 		// To render the distance value under the ESP box.
 		char distC[32];
@@ -109,7 +112,7 @@ void Esp::Update()
 		std::string distS(distC);
 
 		// Then finally taking all the data we acquired for this loop and pushing it to the data list.
-		newData.push_back(Data{
+		newData.push_back(esp::Data{
 			boxVerticies, // Box data
 			entity.name, // Entity name
 			distS + "m", // Distance
@@ -117,16 +120,16 @@ void Esp::Update()
 			fadeFactor, // Fade factor
 			entity.health, // Entity health
 			entity.maxHealth, // And max health (for health bar)
-		});
+			});
 	}
-	renderData = newData;
+	esp::renderData = newData;
 }
 
 void Esp::RenderUpdate()
 {
-	if (!Enabled || !CommonData::dataUpdated) return;
+	if (!esp::Enabled || !CommonData::dataUpdated) return;
 
-	for (Data data : renderData)
+	for (esp::Data data : esp::renderData)
 	{
 		ImVec2 screenSize = ImGui::GetWindowSize();
 
@@ -164,28 +167,25 @@ void Esp::RenderUpdate()
 
 		// The rest is just rendering the ESP with the customizable options, self explanitory.
 
-		if (FilledBox)
+		if (esp::FilledBox)
 		{
-			ImColor bottomColor = ImColor(SecondFilledBoxColor[0], SecondFilledBoxColor[1], SecondFilledBoxColor[2], FilledBoxOpacity * data.opacityFadeFactor);
-			ImColor topColor = ImColor(FilledBoxColor[0], FilledBoxColor[1], FilledBoxColor[2], FilledBoxOpacity * data.opacityFadeFactor);
+			ImColor bottomColor = ImColor(esp::SecondFilledBoxColor[0], esp::SecondFilledBoxColor[1], esp::SecondFilledBoxColor[2], esp::SecondFilledBoxColor[3] * data.opacityFadeFactor);
+			ImColor topColor = ImColor(esp::FilledBoxColor[0], esp::FilledBoxColor[1], esp::FilledBoxColor[2], esp::FilledBoxColor[3] * data.opacityFadeFactor);
 
 			ImGui::GetWindowDrawList()->AddRectFilledMultiColor(ImVec2(left, top), ImVec2(right, bottom), topColor, topColor, bottomColor, bottomColor);
+
 		}
 
-		if (Box)
+		if (esp::Box)
 		{
-			ImGui::GetWindowDrawList()->AddRect(ImVec2(left, top), ImVec2(right, bottom), ImColor(BoxColor[0], BoxColor[1], BoxColor[2], BoxColor[3] * data.opacityFadeFactor));
+			ImGui::GetWindowDrawList()->AddRect(ImVec2(left, top), ImVec2(right, bottom), ImColor(esp::BoxColor[0], esp::BoxColor[1], esp::BoxColor[2], esp::BoxColor[3] * data.opacityFadeFactor));
+			//ImGui::GetWindowDrawList()->AddRect(ImVec2(left - 1, top - 1), ImVec2(right + 1, bottom + 1), ImColor(BoxColor[0], BoxColor[1], BoxColor[2], BoxColor[3] * data.opacityFadeFactor));
+			//ImGui::GetWindowDrawList()->AddRect(ImVec2(left + 1, top + 1), ImVec2(right - 1, bottom - 1), ImColor(BoxColor[0], BoxColor[1], BoxColor[2], BoxColor[3] * data.opacityFadeFactor));
 		}
 
-		if (Outline)
+		if (esp::HealthBar)
 		{
-			ImGui::GetWindowDrawList()->AddRect(ImVec2(left - 1, top - 1), ImVec2(right + 1, bottom + 1), ImColor(OutlineColor[0], OutlineColor[1], OutlineColor[2], OutlineColor[3] * data.opacityFadeFactor));
-			ImGui::GetWindowDrawList()->AddRect(ImVec2(left + 1, top + 1), ImVec2(right - 1, bottom - 1), ImColor(OutlineColor[0], OutlineColor[1], OutlineColor[2], OutlineColor[3] * data.opacityFadeFactor));
-		}
-
-		if (HealthBar)
-		{
-			ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(left - 3, top), ImVec2(left - 1, bottom), ImColor(FilledBoxColor[0], FilledBoxColor[1], FilledBoxColor[2], FilledBoxOpacity * data.opacityFadeFactor));
+			ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(left - 3, top), ImVec2(left - 1, bottom), ImColor(esp::FilledBoxColor[0], esp::FilledBoxColor[1], esp::FilledBoxColor[2], esp::FilledBoxColor[3] * data.opacityFadeFactor));
 
 			if (data.health <= 0)
 				data.health = 0.00001f;
@@ -196,36 +196,42 @@ void Esp::RenderUpdate()
 			ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(left - 3, bottom - (diff * scaleFactor)), ImVec2(left - 1, bottom), ImColor((int)(255 * (1.0 - scaleFactor)), (int)(255 * scaleFactor), 0, (int)(255 * data.opacityFadeFactor)));
 		}
 
-		if (Text && Menu::Font->IsLoaded())
+		if (esp::Text && Menu::Font->IsLoaded())
 		{
 			const char* name = data.name.c_str();
-			ImVec2 textSize = Menu::Font->CalcTextSizeA(TextSize, FLT_MAX, 0.0f, name);
+			ImVec2 textSize = Menu::Font->CalcTextSizeA(esp::TextSize, FLT_MAX, 0.0f, name);
 			float posX = left + ((right - left) / 2) - (textSize.x / 2);
 			float posY = top - textSize.y - 1;
+			if (esp::nickname) {
+				if (data.dist > esp::TextUnrenderDistance) {
+					if (esp::TextOutline)
+					{
+						RenderQOLF::DrawOutlinedText(Menu::Font, esp::TextSize, ImVec2(posX, posY), ImColor(esp::TextColor[0], esp::TextColor[1], esp::TextColor[2], esp::TextColor[3] * data.opacityFadeFactor), ImColor(esp::TextOutlineColor[0], esp::TextOutlineColor[1], esp::TextOutlineColor[2], esp::TextOutlineColor[3] * data.opacityFadeFactor), name);
+					}
+					else {
 
-			if (data.dist > TextUnrenderDistance) {
-				if (TextOutline)
+						ImGui::GetWindowDrawList()->AddText(Menu::Font, esp::TextSize, ImVec2(posX, posY), ImColor(esp::TextColor[0], esp::TextColor[1], esp::TextColor[2], esp::TextColor[3] * data.opacityFadeFactor), name);
+					}
+				}
+
+			}
+			if (esp::distance)
+			{
+				const char* dist = data.distText.c_str();
+				float distTextSize = esp::TextSize / 1.5;
+				textSize = Menu::Font->CalcTextSizeA(distTextSize, FLT_MAX, 0.0f, dist);
+				posX = left + ((right - left) / 2) - (textSize.x / 2);
+				posY = bottom;
+
+				if (esp::TextOutline)
 				{
-					RenderQOLF::DrawOutlinedText(Menu::Font, TextSize, ImVec2(posX, posY), ImColor(TextColor[0], TextColor[1], TextColor[2], TextColor[3] * data.opacityFadeFactor), ImColor(TextOutlineColor[0], TextOutlineColor[1], TextOutlineColor[2], TextOutlineColor[3] * data.opacityFadeFactor), name);
+					RenderQOLF::DrawOutlinedText(Menu::Font, distTextSize, ImVec2(posX, posY), ImColor(esp::TextColor[0], esp::TextColor[1], esp::TextColor[2], esp::TextColor[3] * data.opacityFadeFactor), ImColor(esp::TextOutlineColor[0], esp::TextOutlineColor[1], esp::TextOutlineColor[2], esp::TextOutlineColor[3] * data.opacityFadeFactor), dist);
 				}
 				else {
+					ImGui::GetWindowDrawList()->AddText(Menu::Font, distTextSize, ImVec2(posX, posY), ImColor(esp::TextColor[0], esp::TextColor[1], esp::TextColor[2], esp::TextColor[3] * data.opacityFadeFactor), dist);
 
-					ImGui::GetWindowDrawList()->AddText(Menu::Font, TextSize, ImVec2(posX, posY), ImColor(TextColor[0], TextColor[1], TextColor[2], TextColor[3] * data.opacityFadeFactor), name);
+
 				}
-			}
-
-			const char* dist = data.distText.c_str();
-			float distTextSize = TextSize / 1.5;
-			textSize = Menu::Font->CalcTextSizeA(distTextSize, FLT_MAX, 0.0f, dist);
-			posX = left + ((right - left) / 2) - (textSize.x / 2);
-			posY = bottom;
-
-			if (TextOutline)
-			{
-				RenderQOLF::DrawOutlinedText(Menu::Font, distTextSize, ImVec2(posX, posY), ImColor(TextColor[0], TextColor[1], TextColor[2], TextColor[3] * data.opacityFadeFactor), ImColor(TextOutlineColor[0], TextOutlineColor[1], TextOutlineColor[2], TextOutlineColor[3] * data.opacityFadeFactor), dist);
-			}
-			else {
-				ImGui::GetWindowDrawList()->AddText(Menu::Font, distTextSize, ImVec2(posX, posY), ImColor(TextColor[0], TextColor[1], TextColor[2], TextColor[3] * data.opacityFadeFactor), dist);
 			}
 		}
 	}
@@ -233,19 +239,28 @@ void Esp::RenderUpdate()
 
 void Esp::RenderMenu()
 {
+
 	ImGui::BeginGroup();
 	ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
 	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.12f, 0.12f, 0.12f, 0.5));
 	ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10);
-	if (ImGui::BeginChild("esp", ImVec2(425, 150))) {
+	if (ImGui::BeginChild("esp", ImVec2(425, 330))) {
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3);
-		Menu::DoToggleButtonStuff(28374, "Toggle ESP", &Esp::Enabled);
+		ImGui::Checkbox("Toggle ESP", &esp::Enabled);
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5);
 		ImGui::Separator();
-		Menu::DoToggleButtonStuff(23445, "Show Healthbar", &Esp::HealthBar);
-		Menu::DoToggleButtonStuff(34576, "Show Text", &Esp::Text);
-		Menu::DoSliderStuff(34875, "Fade Distance", &Esp::FadeDistance, 0, 10);
-		Menu::DoSliderStuff(128763, "Text Size", &Esp::TextSize, 12, 24);
+		ImGui::Checkbox("Show box", &esp::Box); ImGui::ColorEdit4("##outespcolor", esp::BoxColor, ALPHA);
+		ImGui::Checkbox("fill top", &esp::FilledBox);  ImGui::ColorEdit4("##fillespcolor", esp::FilledBoxColor, ALPHA);
+		ImGui::Checkbox("fill bottom", &esp::SecondFilledBox);  ImGui::ColorEdit4("##secondfillespcolor", esp::SecondFilledBoxColor, ALPHA);
+		ImGui::Checkbox("Show Healthbar", &esp::HealthBar);
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5);
+		ImGui::Checkbox("Show Text", &esp::Text);
+		ImGui::Checkbox("nickname", &esp::nickname);
+		ImGui::Checkbox("distance", &esp::distance);
+		ImGui::Checkbox("text outline", &esp::TextOutline);
+		Menu::DoSliderStuff(34875, "Fade Distance", &esp::FadeDistance, 0, 10);
+		Menu::DoSliderStuff(128763, "Text Size", &esp::TextSize, 12, 24);
+
 
 		ImGui::EndChild();
 	}
