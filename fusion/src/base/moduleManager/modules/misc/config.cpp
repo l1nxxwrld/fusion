@@ -6,6 +6,9 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <winhttp.h>
+#include "configshare.h"
+#pragma comment(lib, "winhttp.lib")
 
 Config currentConfig;
 
@@ -171,6 +174,8 @@ void config::RenderMenu() {
     static std::vector<std::string> configFiles = ListConfigFiles("C:/fusion"); // List of configs
     static std::string selectedConfig; // Currently selected config name
     static int selectedIndex = -1; // Track selected index in the list
+    static std::string shareURL; // URL for shared config
+    static bool shareURLVisible = false; // Flag to control the visibility of the URL input text
 
     ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.12f, 0.12f, 0.12f, 0.5));
@@ -216,6 +221,20 @@ void config::RenderMenu() {
                 strncpy_s(configName, sizeof(configName), "default", _TRUNCATE); // Reset the input field
             }
         }
+        if (ImGui::Button("Share Config")) {
+            if (!selectedConfig.empty()) {
+                std::cout << "Share button clicked, uploading config: " << selectedConfig << std::endl;
+                shareURL = cfgshare::UploadConfig("C:/fusion/" + selectedConfig + ".json");
+                std::cout << "Share URL: " << shareURL << std::endl;
+                shareURLVisible = true; // Set the flag to true to display the URL
+            }
+        }
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 8);
+        if (shareURLVisible) {
+            ImGui::InputText("Shared URL", (char*)shareURL.c_str(), shareURL.size() + 1, ImGuiInputTextFlags_ReadOnly);
+        }
+
+
         ImGui::EndGroup();
 
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 10);
@@ -223,6 +242,7 @@ void config::RenderMenu() {
         // Input Text for configuration name
         ImGui::InputText("Config Name", configName, IM_ARRAYSIZE(configName));
 
+        // Display the shared URL if available
         // Detach button
         if (ImGui::Button("Detach")) {
             Base::Running = false;
@@ -234,3 +254,6 @@ void config::RenderMenu() {
     ImGui::PopStyleVar();
     ImGui::PopStyleColor();
 }
+
+
+

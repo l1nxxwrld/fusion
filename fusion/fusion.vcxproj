@@ -152,6 +152,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\base\moduleManager\modules\misc\config.h" />
+    <ClInclude Include="src\base\moduleManager\modules\misc\configshare.h" />
     <ClInclude Include="src\base\moduleManager\modules\visual\hud.h" />
     <ClInclude Include="src\base\patcher\data.h" />
     <ClInclude Include="src\base\patcher\miniz.h" />
@@ -225,6 +226,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\base\moduleManager\modules\misc\config.cpp" />
+    <ClCompile Include="src\base\moduleManager\modules\misc\configshare.cpp" />
     <ClCompile Include="src\base\moduleManager\modules\visual\hud.cpp" />
     <ClCompile Include="src\base\patcher\miniz.c" />
     <ClCompile Include="src\base\patcher\patcher.cpp" />
