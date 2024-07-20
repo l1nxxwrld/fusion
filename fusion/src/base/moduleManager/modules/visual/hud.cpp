@@ -8,7 +8,15 @@
 #include "../../../menu/menu.h"
 #include <cmath> // For sin and cos functions
 #include <vector>
+#include <iomanip>
+#include <sstream>
 #include <algorithm>
+
+std::string RoundToString(float value, int decimalPlaces) {
+    std::stringstream stream;
+    stream << std::fixed << std::setprecision(decimalPlaces) << value;
+    return stream.str();
+}
 
 // Helper function to get a rainbow color based on vertical position and time
 ImColor waveColor(float verticalPosition, float time) {
@@ -70,18 +78,29 @@ void Hud::RenderUpdate() {
         // Create a vector to store text items with real values
         std::vector<TextItem> texts;
 
+        // Helper lambda to add a text item with float value
+        auto addTextItem = [&](const char* mainText, float value, std::vector<TextItem>& texts) {
+            // Convert float value to string
+            std::string valueStr = std::to_string(value);
+            // Remove trailing zeroes and decimal point if not needed
+            valueStr.erase(valueStr.find_last_not_of('0') + 1, std::string::npos);
+            if (valueStr.back() == '.') valueStr.pop_back(); // Remove trailing decimal point if necessary
+            // Add text item
+            texts.push_back({ mainText, valueStr.c_str(), 0.0f });
+            };
+
         // Add text items based on current configuration
         if (aimassist::Enabled) {
             texts.push_back({ "aimbot", "", 0.0f });
         }
         if (clicker::leftclicker) {
-            texts.push_back({ "left clicker", std::to_string(clicker::leftMaxCps).c_str(), 0.0f });
+            addTextItem("left clicker", clicker::leftMaxCps, texts);
         }
         if (clicker::rightclicker) {
-            texts.push_back({ "right clicker", std::to_string(clicker::rightMaxCps).c_str(), 0.0f });
+            addTextItem("right clicker", clicker::rightMaxCps, texts);
         }
         if (reach::Enabled) {
-            texts.push_back({ "reach", std::to_string(reach::ReachDistance).c_str(), 0.0f });
+            addTextItem("reach", reach::ReachDistance, texts);
         }
         if (esp::Enabled) {
             texts.push_back({ "esp", "2d", 0.0f });

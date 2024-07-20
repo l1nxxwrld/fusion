@@ -99,6 +99,9 @@ struct clicker {
     inline static float leftMaxCps = 14;
     inline static float leftMinCps = 8;
     inline static bool ignoreBlocks = true;
+    inline static bool blockHit = false; // New field for block hit
+    inline static float blockHitChance = 50.0f; // Chance of block hit as a percentage
+    
 
     inline static bool rightclicker = false;
     inline static float rightMaxCps = 20;
