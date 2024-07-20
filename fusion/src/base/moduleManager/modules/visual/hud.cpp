@@ -1,3 +1,7 @@
+#define NOMINMAX
+#include <windows.h>
+#undef NOMINMAX
+
 #include "../misc/config.h"
 #include "../../../../../ext/imgui/imgui.h"
 #include "hud.h"
@@ -7,50 +11,55 @@
 #include <algorithm>
 
 // Helper function to get a rainbow color based on vertical position and time
-ImColor GetRainbowWaveColor(float verticalPosition, float time) {
-    float waveFrequency = 6.0f; // Increased frequency for a faster color transition
-    float colorOffset = 3.3f; // Offset to ensure only two waves are visible
-    float r = 0.5f * (sin(waveFrequency * verticalPosition + time) + 1.0f); // Red component
-    float g = 0.5f * (sin(waveFrequency * verticalPosition + time + colorOffset) + 1.0f); // Green component
-    float b = 0.5f * (sin(waveFrequency * verticalPosition + time + 2.0f * colorOffset) + 1.0f); // Blue component
+ImColor waveColor(float verticalPosition, float time) {
+    float waveFrequency = 6.0f; // Frequency for color transition
+    float colorOffset = 2.7f; // Offset for hue shift
+    float hueShift = sinf(waveFrequency * verticalPosition + time) * 0.2f; // Adjust the hue shift
+
+    // Base pink color
+    float baseR = 1.0f; // Red component
+    float baseG = 0.5f; // Green component
+    float baseB = 0.8f; // Blue component
+
+    // Apply hue shift
+    float r = baseR + hueShift;
+    float g = baseG + hueShift;
+    float b = baseB + hueShift;
+
+    // Clamp values to [0, 1]
+    r = std::max(0.0f, std::min(1.0f, r));
+    g = std::max(0.0f, std::min(1.0f, g));
+    b = std::max(0.0f, std::min(1.0f, b));
+
     return ImColor(r, g, b);
 }
 
 // Helper function to render text with shadow and rainbow wave effect
-void RenderTextWithShadow(ImDrawList* drawList, ImFont* font, const char* mainText, const char* subText, float posX, float& yPos, float fontSize, float shadowOffset, float subTextGap, ImColor shadowColor, ImColor subTextColor) {
+void renderTextShadow(ImDrawList* drawList, ImFont* font, const char* mainText, const char* subText, float posX, float& yPos, float fontSize, float shadowOffset, float subTextGap, ImColor shadowColor, ImColor subTextColor) {
+    // Calculate text sizes
     ImVec2 mainTextSize = font->CalcTextSizeA(fontSize, FLT_MAX, 0.0f, mainText);
     ImVec2 subTextSize = font->CalcTextSizeA(fontSize, FLT_MAX, 0.0f, subText);
 
     // Calculate positions
     float mainTextPosX = posX - mainTextSize.x - subTextSize.x - subTextGap;
-    float shadowPosX = mainTextPosX + shadowOffset;
-    float shadowPosY = yPos + shadowOffset;
+    float subTextPosX = mainTextPosX + mainTextSize.x + subTextGap;
 
-    // Render shadows
-    drawList->AddText(font, fontSize, ImVec2(shadowPosX, shadowPosY), shadowColor, mainText);
-    drawList->AddText(font, fontSize, ImVec2(shadowPosX + mainTextSize.x + subTextGap, shadowPosY), shadowColor, subText);
+    // Render shadow and main text for the main text
+    drawList->AddText(font, fontSize, ImVec2(mainTextPosX + shadowOffset, yPos + shadowOffset), shadowColor, mainText);
+    drawList->AddText(font, fontSize, ImVec2(mainTextPosX, yPos), waveColor(yPos, ImGui::GetTime() * 10.0f), mainText);
 
-    // Render main text with vertical wave effect
-    ImVec2 currentPos = ImVec2(mainTextPosX, yPos);
-    for (const char* c = mainText; *c; ++c) {
-        ImVec2 charSize = font->CalcTextSizeA(fontSize, FLT_MAX, 0.0f, c, c + 1);
-        // Apply a phase offset based on the character's position
-        float phaseOffset = fmod(currentPos.x, 2.0f * fontSize) / fontSize; // Creates two close waves
-        ImColor rainbowColor = GetRainbowWaveColor(currentPos.y, ImGui::GetTime() * 10.0f); // Increase time factor for faster transition
-        drawList->AddText(font, fontSize, currentPos, rainbowColor, c);
-        currentPos.x += charSize.x; // Move to the next character position
+    // Render shadow and subtext if it exists
+    if (subText[0] != '\0') {
+        drawList->AddText(font, fontSize, ImVec2(subTextPosX + shadowOffset, yPos + shadowOffset), shadowColor, subText);
+        drawList->AddText(font, fontSize, ImVec2(subTextPosX, yPos), subTextColor, subText);
     }
 
-    // Render subtext
-    drawList->AddText(font, fontSize, ImVec2(mainTextPosX + mainTextSize.x + subTextGap, yPos), subTextColor, subText);
-
-    // Update y position for next line
-    yPos += fontSize - 6; // Update yPos for next module
+    // Update y position for the next line
+    yPos += fontSize - 6; // Adjust this value as needed
 }
 
 void Hud::RenderUpdate() {
-    if (arraylist::enable)
-    {
+    if (arraylist::enable) {
         // Texts and associated subtexts
         struct TextItem {
             const char* mainText;
@@ -58,33 +67,44 @@ void Hud::RenderUpdate() {
             float length;
         };
 
-        std::vector<TextItem> texts = {
-            { "aimbot", "", 0.0f },
-            { "clicker", "18", 0.0f },
-            { "player esp", "2d", 0.0f },
-            { "arraylist", "", 0.0f },
-            { "delay remover", "", 0.0f },
-            { "bridge assist", "matrix", 0.0f }
-        };
+        // Create a vector to store text items with real values
+        std::vector<TextItem> texts;
+
+        // Add text items based on current configuration
+        if (aimassist::Enabled) {
+            texts.push_back({ "aimbot", "", 0.0f });
+        }
+        if (clicker::leftclicker) {
+            texts.push_back({ "left clicker", std::to_string(clicker::leftMaxCps).c_str(), 0.0f });
+        }
+        if (clicker::rightclicker) {
+            texts.push_back({ "right clicker", std::to_string(clicker::rightMaxCps).c_str(), 0.0f });
+        }
+        if (reach::Enabled) {
+            texts.push_back({ "reach", std::to_string(reach::ReachDistance).c_str(), 0.0f });
+        }
+        if (esp::Enabled) {
+            texts.push_back({ "esp", "2d", 0.0f });
+        }
+        texts.push_back({ "arraylist", "", 0.0f }); // Always show arraylist
 
         // Configuration
-        float rightMargin = 2.0f; // Margin from the right edge
-        float topMargin = 2.0f; // Initial margin from the top edge
-        float font_size = 24.0f; // Font size
-        float lineSpacing = 0.0f; // Spacing between lines set to 0
-        float shadowOffset = 1.0f; // Offset for the shadow
-        float subTextGap = 4.0f; // Gap between main text and subtext
+        float rightMargin = 2.0f;
+        float topMargin = 2.0f;
+        float font_size = 24.0f;
+        float shadowOffset = 1.0f;
+        float subTextGap = 4.0f;
 
         // Colors
-        ImColor subTextColor(192, 192, 192); // Grayish
-        ImColor shadowColor(0, 0, 0); // Static dark shadow color
+        ImColor subTextColor(192, 192, 192);
+        ImColor shadowColor(0, 0, 0, 128);
 
         // Get screen size
         ImVec2 screenSize = ImGui::GetIO().DisplaySize;
 
         // Calculate lengths for sorting
         for (auto& textItem : texts) {
-            textItem.length = Menu::Font->CalcTextSizeA(font_size, FLT_MAX, 0.0f, textItem.mainText).x + Menu::Font->CalcTextSizeA(font_size, FLT_MAX, 0.0f, textItem.subText).x + subTextGap;
+            textItem.length = Menu::FontBold->CalcTextSizeA(font_size, FLT_MAX, 0.0f, textItem.mainText).x + Menu::FontBold->CalcTextSizeA(font_size, FLT_MAX, 0.0f, textItem.subText).x + subTextGap;
         }
 
         // Sort texts by length (longest to shortest)
@@ -98,7 +118,7 @@ void Hud::RenderUpdate() {
 
         // Render all elements
         for (const auto& textItem : texts) {
-            RenderTextWithShadow(ImGui::GetWindowDrawList(), Menu::Font, textItem.mainText, textItem.subText, posX, posY, font_size, shadowOffset, subTextGap, shadowColor, subTextColor);
+            renderTextShadow(ImGui::GetWindowDrawList(), Menu::FontBold, textItem.mainText, textItem.subText, posX, posY, font_size, shadowOffset, subTextGap, shadowColor, subTextColor);
         }
     }
 }
