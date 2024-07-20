@@ -4,8 +4,6 @@ fusionplus is a continuation of [fusion](https://github.com/deadshxll/fusion) as
 <div align="center">
 <img src="[https://i.imgur.com/LbLgJPj.png](https://cdn.discordapp.com/attachments/1160982839576252496/1264223944995504219/Screenshot_2.png?ex=669d17cc&is=669bc64c&hm=b436ceec6fb570a8adb97b7efa848a82b08767be3d74aa0fd1aeec3ddfad23e3&)">
 </div>
-> [!IMPORTANT]  
-> menu is going to be reworked
 
 # getting started
 - download the source code by clicking on the code button -> download zip
